@@ -1,7 +1,9 @@
-import React from 'react'
+import AxisWidget from '@/components/section/axis-widget'
 
 export const HomePage = () => {
   return (
-    <div>home</div>
+    <main className="p-10">
+      <AxisWidget />
+    </main>
   )
 }
