@@ -2,79 +2,114 @@
 
 import { Canvas } from "@react-three/fiber";
 import { OrbitControls, Text } from "@react-three/drei";
+import * as THREE from "three";
+import { useLayoutEffect, useMemo, useRef } from "react";
 
 interface AxisProps {
   angle: number;
 }
+
+/* ---------- SOLID LINE ---------- */
+
+interface LineProps {
+  start: [number, number, number];
+  end: [number, number, number];
+  color: string;
+}
+
+function SolidLine({ start, end, color }: LineProps) {
+  const points = [new THREE.Vector3(...start), new THREE.Vector3(...end)];
+
+  const geometry = useMemo(
+    () => new THREE.BufferGeometry().setFromPoints(points),
+    [start, end],
+  );
+  const material = useMemo(
+    () => new THREE.LineBasicMaterial({ color, linewidth: 2 }),
+    [color],
+  );
+
+  return <primitive object={new THREE.Line(geometry, material)} />;
+}
+
+/* ---------- DASHED LINE ---------- */
+
+function DashedLine({ start, end, color }: LineProps) {
+  const ref = useRef<THREE.Line>(null);
+
+  const geometry = useMemo(() => {
+    const points = [new THREE.Vector3(...start), new THREE.Vector3(...end)];
+    return new THREE.BufferGeometry().setFromPoints(points);
+  }, [start, end]);
+
+  const material = useMemo(
+    () => new THREE.LineDashedMaterial({ color, dashSize: 0.2, gapSize: 0.15 }),
+    [color],
+  );
+
+  useLayoutEffect(() => {
+    if (ref.current) {
+      ref.current.computeLineDistances();
+    }
+  }, [geometry]);
+
+  return <primitive object={new THREE.Line(geometry, material)} ref={ref} />;
+}
+
+/* ---------- ROTATING AXES ---------- */
 
 function RotatingAxes({ angle }: AxisProps) {
   const rad = (angle * Math.PI) / 180;
 
   return (
     <group rotation={[0, 0, rad]}>
-      {/* Rotating E1 */}
-      <mesh position={[1.5, 0, 0]}>
-        <boxGeometry args={[3, 0.05, 0.05]} />
-        <meshStandardMaterial color="red" />
-      </mesh>
-
+      <SolidLine start={[0, 0, 0]} end={[3, 0, 0]} color="red" />
       <Text position={[3.3, 0, 0]} fontSize={0.3} color="red">
         E1
       </Text>
 
-      {/* Rotating E2 */}
-      <mesh position={[0, 1.5, 0]}>
-        <boxGeometry args={[0.05, 3, 0.05]} />
-        <meshStandardMaterial color="green" />
-      </mesh>
-
-      <Text position={[0, 3.2, 0]} fontSize={0.3} color="green">
+      <SolidLine start={[0, 0, 0]} end={[0, 3, 0]} color="green" />
+      <Text position={[0, 3.3, 0]} fontSize={0.3} color="green">
         E2
       </Text>
     </group>
   );
 }
 
-function ReferenceAxes() {
-  return (
-    <group>
-      {/* Reference E1 */}
-      <mesh position={[1.5, 0, 0]}>
-        <boxGeometry args={[3, 0.02, 0.02]} />
-        <meshStandardMaterial color="gray" />
-      </mesh>
-
-      <Text position={[3.496, 0, 0]} fontSize={0.25} color="gray">
-        E1 ref
-      </Text>
-
-      {/* Reference E2 */}
-      <mesh position={[0, 1.5, 0]}>
-        <boxGeometry args={[0.02, 3, 0.02]} />
-        <meshStandardMaterial color="gray" />
-      </mesh>
-
-      <Text position={[0, 3.5, 0]} fontSize={0.25} color="gray">
-        E2 ref
-      </Text>
-    </group>
-  );
-}
+/* ---------- FIXED E3 ---------- */
 
 function FixedE3() {
   return (
     <group>
-      <mesh position={[0, 0, 1.5]}>
-        <boxGeometry args={[0.05, 0.05, 3]} />
-        <meshStandardMaterial color="blue" />
-      </mesh>
-
-      <Text position={[0, 0, 3.2]} fontSize={0.3} color="blue">
+      <SolidLine start={[0, 0, 0]} end={[0, 0, 3]} color="blue" />
+      <Text position={[0, 0, 3.3]} fontSize={0.3} color="blue">
         E3
       </Text>
     </group>
   );
 }
+
+/* ---------- REFERENCE LINES ---------- */
+
+function ReferenceLines() {
+  return (
+    <group>
+      {/* E1 reference */}
+      <DashedLine start={[0, 0, 0]} end={[3, 0, 0]} color="gray" />
+
+      {/* E2 reference */}
+      <DashedLine start={[0, 0, 0]} end={[0, 3, 0]} color="gray" />
+
+      {/* Additional reference vector V1 */}
+      <DashedLine start={[0, 0, 0]} end={[2.5, 1.5, 0]} color="orange" />
+      <Text position={[2.6, 1.6, 0]} fontSize={0.25} color="orange">
+        V1
+      </Text>
+    </group>
+  );
+}
+
+/* ---------- MAIN SCENE ---------- */
 
 export function Axis3D({ angle }: AxisProps) {
   return (
@@ -82,13 +117,13 @@ export function Axis3D({ angle }: AxisProps) {
       <ambientLight intensity={0.5} />
       <pointLight position={[10, 10, 10]} />
 
-      {/* Fixed reference axes */}
-      <ReferenceAxes />
+      {/* Fixed reference lines (dashed) */}
+      <ReferenceLines />
 
-      {/* Rotating axes */}
+      {/* Rotating axes (solid) */}
       <RotatingAxes angle={angle} />
 
-      {/* Fixed E3 */}
+      {/* Fixed E3 axis (solid) */}
       <FixedE3 />
 
       <OrbitControls />
