@@ -7,22 +7,22 @@ interface AxisProps {
   angle: number;
 }
 
-function AxisLines({ angle }: AxisProps) {
+function RotatingAxes({ angle }: AxisProps) {
   const rad = (angle * Math.PI) / 180;
 
   return (
     <group rotation={[0, 0, rad]}>
-      {/* E1 axis */}
+      {/* Rotating E1 */}
       <mesh position={[1.5, 0, 0]}>
         <boxGeometry args={[3, 0.05, 0.05]} />
         <meshStandardMaterial color="red" />
       </mesh>
 
-      <Text position={[3.2, 0, 0]} fontSize={0.3} color="red">
+      <Text position={[3.3, 0, 0]} fontSize={0.3} color="red">
         E1
       </Text>
 
-      {/* E2 axis */}
+      {/* Rotating E2 */}
       <mesh position={[0, 1.5, 0]}>
         <boxGeometry args={[0.05, 3, 0.05]} />
         <meshStandardMaterial color="green" />
@@ -31,8 +31,39 @@ function AxisLines({ angle }: AxisProps) {
       <Text position={[0, 3.2, 0]} fontSize={0.3} color="green">
         E2
       </Text>
+    </group>
+  );
+}
 
-      {/* E3 axis */}
+function ReferenceAxes() {
+  return (
+    <group>
+      {/* Reference E1 */}
+      <mesh position={[1.5, 0, 0]}>
+        <boxGeometry args={[3, 0.02, 0.02]} />
+        <meshStandardMaterial color="gray" />
+      </mesh>
+
+      <Text position={[3.496, 0, 0]} fontSize={0.25} color="gray">
+        E1 ref
+      </Text>
+
+      {/* Reference E2 */}
+      <mesh position={[0, 1.5, 0]}>
+        <boxGeometry args={[0.02, 3, 0.02]} />
+        <meshStandardMaterial color="gray" />
+      </mesh>
+
+      <Text position={[0, 3.5, 0]} fontSize={0.25} color="gray">
+        E2 ref
+      </Text>
+    </group>
+  );
+}
+
+function FixedE3() {
+  return (
+    <group>
       <mesh position={[0, 0, 1.5]}>
         <boxGeometry args={[0.05, 0.05, 3]} />
         <meshStandardMaterial color="blue" />
@@ -47,11 +78,18 @@ function AxisLines({ angle }: AxisProps) {
 
 export function Axis3D({ angle }: AxisProps) {
   return (
-    <Canvas camera={{ position: [5, 5, 5] }}>
+    <Canvas camera={{ position: [0.5, 0.2, 5] }}>
       <ambientLight intensity={0.5} />
       <pointLight position={[10, 10, 10]} />
 
-      <AxisLines angle={angle} />
+      {/* Fixed reference axes */}
+      <ReferenceAxes />
+
+      {/* Rotating axes */}
+      <RotatingAxes angle={angle} />
+
+      {/* Fixed E3 */}
+      <FixedE3 />
 
       <OrbitControls />
     </Canvas>
